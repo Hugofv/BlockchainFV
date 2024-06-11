@@ -9,12 +9,17 @@ import {
 import * as CryptoJS from 'crypto-js';
 import { Socket, Server } from 'socket.io';
 import { BlockchainService } from 'src/blockchain/blockchain.service';
-import { MINT_PUBLIC_ADDRESS } from 'src/constants';
+import { MINT_PUBLIC_ADDRESS, keyPair, publicKey } from 'src/constants';
 import { Block } from 'src/entities/Block.entity';
+import { Transaction } from 'src/entities/Transaction.entity';
 
 const MY_ADDRESS: string = 'ws://localhost:3000';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
 export class WebsocketsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -258,6 +263,7 @@ export class WebsocketsGateway
     console.log(`Client connected: ${client.id}`);
     const address = client.handshake.address;
 
+    console.log(`Connecting to ${address}`);
     if (
       !this.connected.find(
         (peerAddress) => peerAddress.handshake.address === address,
@@ -306,6 +312,21 @@ export class WebsocketsGateway
   @SubscribeMessage('messageToServer')
   handleMessage(client: Socket, payload: any): void {
     console.log(`Message from client ${client.id}: ${payload}`);
-    this.server.emit('messageToClient', payload);
+    //  this.server.emit('messageToClient', payload);
+
+    const transaction = new Transaction(
+      publicKey,
+      '046856ec283a5ecbd040cd71383a5e6f6ed90ed2d7e8e599dbb5891c13dff26f2941229d9b7301edf19c5aec052177fac4231bb2515cb59b1b34aea5c06acdef43',
+      200,
+      10,
+    );
+
+    transaction.sign(keyPair);
+
+    this.sendMessage(
+      this.produceMessage('TYPE_CREATE_TRANSACTION', transaction),
+    );
+
+    this.blockchainService.addTransaction(transaction);
   }
 }
