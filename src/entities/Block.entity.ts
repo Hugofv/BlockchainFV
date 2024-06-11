@@ -1,26 +1,58 @@
 import * as CryptoJS from 'crypto-js';
+import { MINT_PUBLIC_ADDRESS } from 'src/constants';
+import { Transaction } from './Transaction.entity';
 
 export class Block {
-  public index: number;
-  public timestamp: number;
-  public data: string;
+  public timestamp: string;
+  public data: any;
   public previousHash: string;
   public hash: string;
+  public nonce: number;
 
-  constructor(index, timestamp, data, previousHash = '') {
-    this.index = index;
+  constructor(timestamp = Date.now().toString(), data = []) {
     this.timestamp = timestamp;
     this.data = data;
-    this.previousHash = previousHash;
-    this.hash = this.calculateHash();
+    this.previousHash = '';
+    this.hash = Block.getHash(this);
+    this.nonce = 0;
   }
 
-  calculateHash() {
+  static getHash(block) {
     return CryptoJS.SHA256(
-      this.index +
-        this.previousHash +
-        this.timestamp +
-        JSON.stringify(this.data),
-    ).toString();
+      block.prevHash +
+        block.timestamp +
+        JSON.stringify(block.data) +
+        block.nonce,
+    );
+  }
+
+  mine(difficulty) {
+    while (!this.hash.startsWith(Array(difficulty + 1).join('0'))) {
+      this.nonce++;
+      this.hash = Block.getHash(this);
+    }
+  }
+
+  static hasValidTransactions(block, chain) {
+    let gas = 0,
+      reward = 0;
+
+    block.data.forEach((transaction) => {
+      if (transaction.from !== MINT_PUBLIC_ADDRESS) {
+        gas += transaction.gas;
+      } else {
+        reward = transaction.amount;
+      }
+    });
+
+    return (
+      reward - gas === chain.reward &&
+      block.data.every((transaction) =>
+        Transaction.isValid(transaction, chain),
+      ) &&
+      block.data.filter(
+        (transaction) => transaction.from === MINT_PUBLIC_ADDRESS,
+      ).length === 1
+    );
   }
 }

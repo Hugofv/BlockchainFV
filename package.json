@@ -23,13 +23,17 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.3.9",
     "@nestjs/swagger": "^7.3.1",
+    "@nestjs/websockets": "^10.3.9",
     "class-validator": "^0.14.1",
     "crypto-js": "^4.2.0",
+    "elliptic": "^6.5.5",
     "nestjs-web3js": "^1.0.4",
     "nestjs-zod": "^3.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.7.5",
     "web3": "^4.9.0"
   },
   "devDependencies": {
